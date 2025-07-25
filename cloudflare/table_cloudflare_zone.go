@@ -14,6 +14,7 @@ import (
 	"github.com/cloudflare/cloudflare-go/v4/cache"
 	"github.com/cloudflare/cloudflare-go/v4/argo"
 	"github.com/cloudflare/cloudflare-go/v4/bot_management"
+	"github.com/cloudflare/cloudflare-go/v4/security_txt"
 )
 
 func tableCloudflareZone(ctx context.Context) *plugin.Table {
@@ -58,6 +59,7 @@ func tableCloudflareZone(ctx context.Context) *plugin.Table {
 			{Name: "argo_tiered_caching", Type: proto.ColumnType_JSON, Hydrate: getArgoTieredCaching, Transform: transform.FromValue(), Description: "Argo Tiered Caching settings for the zone."},
 			{Name: "argo_smart_routing", Type: proto.ColumnType_JSON, Hydrate: getArgoSmartRouting, Transform: transform.FromValue(), Description: "Argo Smart Routing settings for the zone."},
 			{Name: "bot_management", Type: proto.ColumnType_JSON, Hydrate: getBotManagement, Transform: transform.FromValue(), Description: "Bot management settings for the zone."},
+			{Name: "security_txt", Type: proto.ColumnType_JSON, Hydrate: getSecurityTXT, Transform: transform.FromValue(), Description: "Security.txt configuration for the zone."},
 		}),
 	}
 }
@@ -282,6 +284,23 @@ func getBotManagement(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
     }
 
     return envelope, nil
+}
+
+func getSecurityTXT(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	conn, err := connectV4(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+	zone := h.Item.(zones.Zone)
+	input := security_txt.SecurityTXTGetParams{
+		ZoneID: cloudflare.F(zone.ID),
+	}
+
+	security_txt, err := conn.SecurityTXT.Get(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return security_txt, nil
 }
 
 //// TRANSFORM FUNCTIONS
