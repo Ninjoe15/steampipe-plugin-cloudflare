@@ -2,13 +2,15 @@ package cloudflare
 
 import (
 	"context"
-
+	"strings"
+	
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/dns"
 	"github.com/cloudflare/cloudflare-go/v4/zones"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/cloudflare/cloudflare-go/v4/cache"
 )
 
 func tableCloudflareZone(ctx context.Context) *plugin.Table {
@@ -48,6 +50,8 @@ func tableCloudflareZone(ctx context.Context) *plugin.Table {
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "Status of the zone."},
 			{Name: "type", Type: proto.ColumnType_STRING, Description: "A full zone implies that DNS is hosted with Cloudflare. A partial zone is typically a partner-hosted zone or a CNAME setup."},
 			{Name: "vanity_name_servers", Type: proto.ColumnType_JSON, Description: "Custom name servers for the zone."},
+			{Name: "smart_tiered_cache", Type: proto.ColumnType_JSON, Hydrate: getSmartTieredCache, Transform: transform.FromValue(), Description: "Smart Tiered Cache settings for the zone."},
+			{Name: "regional_tiered_cache", Type: proto.ColumnType_JSON, Hydrate: getRegionalTieredCache, Transform: transform.FromValue(), Description: "Regional Tiered Cache settings for the zone."},
 		}),
 	}
 }
@@ -144,6 +148,46 @@ func getZonePlan(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 		return nil, err
 	}
 	return plans, nil
+}
+
+func getSmartTieredCache(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	conn, err := connectV4(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+	zone := h.Item.(zones.Zone)
+	input := cache.SmartTieredCacheGetParams{
+		ZoneID: cloudflare.F(zone.ID),
+	}
+
+	smartTieredCache, err := conn.Cache.SmartTieredCache.Get(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return smartTieredCache, nil
+}
+
+func getRegionalTieredCache(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	conn, err := connectV4(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+	zone := h.Item.(zones.Zone)
+	input := cache.RegionalTieredCacheGetParams{
+		ZoneID: cloudflare.F(zone.ID),
+	}
+
+	regionalTieredCache, err := conn.Cache.RegionalTieredCache.Get(ctx, input)
+	if err != nil {
+		// This setting might not be available for all zones
+		if strings.Contains(err.Error(), "setting is not available") {
+			return nil,nil
+		}
+		logger.Error("cloudflare_zone_setting.listZoneSettings", "Regional tiered cache api error", err)
+		return nil, nil
+	}
+	return regionalTieredCache, nil
 }
 
 //// TRANSFORM FUNCTIONS
