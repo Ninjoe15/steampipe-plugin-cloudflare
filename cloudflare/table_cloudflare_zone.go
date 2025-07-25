@@ -3,7 +3,8 @@ package cloudflare
 import (
 	"context"
 	"strings"
-	
+	"fmt"
+
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/dns"
 	"github.com/cloudflare/cloudflare-go/v4/zones"
@@ -11,6 +12,8 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 	"github.com/cloudflare/cloudflare-go/v4/cache"
+	"github.com/cloudflare/cloudflare-go/v4/argo"
+	"github.com/cloudflare/cloudflare-go/v4/bot_management"
 )
 
 func tableCloudflareZone(ctx context.Context) *plugin.Table {
@@ -52,6 +55,9 @@ func tableCloudflareZone(ctx context.Context) *plugin.Table {
 			{Name: "vanity_name_servers", Type: proto.ColumnType_JSON, Description: "Custom name servers for the zone."},
 			{Name: "smart_tiered_cache", Type: proto.ColumnType_JSON, Hydrate: getSmartTieredCache, Transform: transform.FromValue(), Description: "Smart Tiered Cache settings for the zone."},
 			{Name: "regional_tiered_cache", Type: proto.ColumnType_JSON, Hydrate: getRegionalTieredCache, Transform: transform.FromValue(), Description: "Regional Tiered Cache settings for the zone."},
+			{Name: "argo_tiered_caching", Type: proto.ColumnType_JSON, Hydrate: getArgoTieredCaching, Transform: transform.FromValue(), Description: "Argo Tiered Caching settings for the zone."},
+			{Name: "argo_smart_routing", Type: proto.ColumnType_JSON, Hydrate: getArgoSmartRouting, Transform: transform.FromValue(), Description: "Argo Smart Routing settings for the zone."},
+			{Name: "bot_management", Type: proto.ColumnType_JSON, Hydrate: getBotManagement, Transform: transform.FromValue(), Description: "Bot management settings for the zone."},
 		}),
 	}
 }
@@ -188,6 +194,94 @@ func getRegionalTieredCache(ctx context.Context, d *plugin.QueryData, h *plugin.
 		return nil, nil
 	}
 	return regionalTieredCache, nil
+}
+
+func getArgoSmartRouting(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	conn, err := connectV4(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+	zone := h.Item.(zones.Zone)
+	input := argo.SmartRoutingGetParams{
+		ZoneID: cloudflare.F(zone.ID),
+	}
+
+	argoSmartRouting, err := conn.Argo.SmartRouting.Get(ctx, input)
+	if err != nil {
+		// This setting might not be available for all zones
+		if strings.Contains(err.Error(), "The request is not authorized to access this setting") {
+			return nil,nil
+		}
+		logger.Error("cloudflare_zone_setting.listZoneSettings", "Argo smart routing api error", err)
+		return nil, nil
+	}
+	return argoSmartRouting, nil
+}
+
+func getArgoTieredCaching(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	conn, err := connectV4(ctx, d)
+	if err != nil {
+		return nil, err
+	}
+	zone := h.Item.(zones.Zone)
+	input := argo.TieredCachingGetParams{
+		ZoneID: cloudflare.F(zone.ID),
+	}
+
+	argoTieredCaching, err := conn.Argo.TieredCaching.Get(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return argoTieredCaching, nil
+}
+
+type BotManagementEnvelope struct {
+    bot_management.BotManagementGetResponse
+    BotMode string `json:"bot_mode"`
+}
+
+func getBotManagement(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+    logger := plugin.Logger(ctx)
+    conn, err := connectV4(ctx, d)
+    if err != nil {
+        return nil, err
+    }
+
+    zone := h.Item.(zones.Zone)
+    params := bot_management.BotManagementGetParams{
+        ZoneID: cloudflare.F(zone.ID),
+    }
+
+    resp, err := conn.BotManagement.Get(ctx, params)
+    if err != nil {
+        logger.Error("cloudflare_bot_management.get", "API error", err)
+        return nil, err
+    }
+
+    // Détermine le mode à partir de l’union
+    union := resp.AsUnion()
+	var mode string
+    switch cfg := union.(type) {
+    case bot_management.BotFightModeConfiguration:
+        mode = "basic"
+    case bot_management.SuperBotFightModeDefinitelyConfiguration:
+        mode = "sbfm_definitely"
+    case bot_management.SuperBotFightModeLikelyConfiguration:
+        mode = "sbfm_likely"
+    case bot_management.SubscriptionConfiguration:
+        mode = "enterprise"
+    default:
+        mode = "unknown"
+        logger.Warn("cloudflare_bot_management", "unknown type", fmt.Sprintf("%T", cfg))
+    }
+
+    envelope := BotManagementEnvelope{
+        BotManagementGetResponse: *resp,
+        BotMode:                  mode,
+    }
+
+    return envelope, nil
 }
 
 //// TRANSFORM FUNCTIONS
