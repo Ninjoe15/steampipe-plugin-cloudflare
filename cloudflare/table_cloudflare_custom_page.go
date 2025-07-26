@@ -68,9 +68,9 @@ func tableCloudflareCustomPage(ctx context.Context) *plugin.Table {
 
 //// LIST FUNCTION
 
-// listRulesets retrieves all rulesets for the specified account_id or zone_id.
+// listRulesets retrieves all custom pages for the specified account_id or zone_id.
 //
-// This function handles both account-level and zone-level rulesets:
+// This function handles both account-level and zone-level custom pages:
 // - Account-level rulesets (account_id)
 // - Zone-level rulesets (zone_id)
 func listCustomPages(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
