@@ -45,6 +45,9 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"cloudflare_zone_setting":          tableCloudflareZoneSetting(ctx),
 			"cloudflare_custom_page":           tableCloudflareCustomPage(ctx),
 			"cloudflare_notification_policy":   tableCloudflareNotificationPolicy(ctx),
+			"cloudflare_custom_certificate":   	tableCloudflareCustomCertificate(ctx),
+			"cloudflare_logpush_job":   		tableCloudflareLogpushJob(ctx),
+			"cloudflare_healthcheck":   		tableCloudflareHealthcheck(ctx),
 		},
 	}
 	return p

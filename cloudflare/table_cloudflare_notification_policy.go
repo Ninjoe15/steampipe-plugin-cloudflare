@@ -79,8 +79,8 @@ func listNotificationPolicies(ctx context.Context, d *plugin.QueryData, _ *plugi
 	// Execute paginated API call
 	iter := conn.Alerting.Policies.ListAutoPaging(ctx, input)
 	for iter.Next() {
-		ruleset := iter.Current()
-		d.StreamListItem(ctx, ruleset)
+		notificationPolicy := iter.Current()
+		d.StreamListItem(ctx, notificationPolicy)
 
 		// Context can be cancelled due to manual cancellation or the limit has been hit
 		if d.RowsRemaining(ctx) == 0 {
