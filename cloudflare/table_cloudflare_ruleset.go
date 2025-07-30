@@ -37,8 +37,8 @@ func tableCloudflareRuleset(ctx context.Context) *plugin.Table {
 			{Name: "id", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Ruleset identifier."},
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "The human-readable name of the ruleset."},
 			{Name: "kind", Type: proto.ColumnType_STRING, Description: "The kind of the ruleset (managed, custom, root, or zone)."},
-			{Name: "phase", Type: proto.ColumnType_STRING, Description: "The phase of the ruleset."},
-
+			{Name: "phase", Type: proto.ColumnType_STRING,Description: "The phase of the ruleset."},
+			
 			// Query columns for filtering
 			{Name: "account_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("account_id"), Description: "The account ID to filter rulesets."},
 			{Name: "zone_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("zone_id"), Description: "The zone ID to filter rulesets."},

@@ -3,7 +3,6 @@ package cloudflare
 import (
 	"context"
 	"strings"
-	"fmt"
 
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/dns"
@@ -238,11 +237,6 @@ func getArgoTieredCaching(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 	return argoTieredCaching, nil
 }
 
-type BotManagementEnvelope struct {
-    bot_management.BotManagementGetResponse
-    BotMode string `json:"bot_mode"`
-}
-
 func getBotManagement(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
     logger := plugin.Logger(ctx)
     conn, err := connectV4(ctx, d)
@@ -261,29 +255,8 @@ func getBotManagement(ctx context.Context, d *plugin.QueryData, h *plugin.Hydrat
         return nil, err
     }
 
-    // Détermine le mode à partir de l’union
-    union := resp.AsUnion()
-	var mode string
-    switch cfg := union.(type) {
-    case bot_management.BotFightModeConfiguration:
-        mode = "basic"
-    case bot_management.SuperBotFightModeDefinitelyConfiguration:
-        mode = "sbfm_definitely"
-    case bot_management.SuperBotFightModeLikelyConfiguration:
-        mode = "sbfm_likely"
-    case bot_management.SubscriptionConfiguration:
-        mode = "enterprise"
-    default:
-        mode = "unknown"
-        logger.Warn("cloudflare_bot_management", "unknown type", fmt.Sprintf("%T", cfg))
-    }
-
-    envelope := BotManagementEnvelope{
-        BotManagementGetResponse: *resp,
-        BotMode:                  mode,
-    }
-
-    return envelope, nil
+	// BotManagementGetResponse.AsUnion returns the wrong type, returning the raw json instead
+    return resp.JSON.RawJSON(), nil
 }
 
 func getSecurityTXT(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
