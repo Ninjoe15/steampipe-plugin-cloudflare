@@ -34,25 +34,27 @@ func tableCloudflareHealthcheck(ctx context.Context) *plugin.Table {
 			// Top columns
 			{Name: "id", Type: proto.ColumnType_STRING, Transform: transform.FromField("ID"), Description: "Healthcheck identifier."},
 			{Name: "address", Type: proto.ColumnType_STRING, Description: "The hostname or IP address of the origin server to run health checks on."},
-			{Name: "check_regions", Type: proto.ColumnType_JSON, Description: "A list of regions from which to run health checks. Null means Cloudflare will pick a default region."},
 			{Name: "consecutive_fails", Type: proto.ColumnType_INT, Description: "The number of consecutive fails required from a health check before changing the health to unhealthy."},
 			{Name: "consecutive_successes", Type: proto.ColumnType_INT, Description: "The number of consecutive successes required from a health check before changing the health to healthy."},
 			{Name: "created_on", Type: proto.ColumnType_TIMESTAMP, Description: "When the healthcheck was created."},
 			{Name: "description", Type: proto.ColumnType_STRING, Description: "A human-readable description of the health check."},
 			{Name: "failure_reason", Type: proto.ColumnType_STRING, Description: "The current failure reason if status is unhealthy."},
-			{Name: "http_config", Type: proto.ColumnType_JSON,Transform: transform.FromField("HTTPConfig"), Description: "Parameters specific to an HTTP or HTTPS health check."},
 			{Name: "interval", Type: proto.ColumnType_INT, Description: "The interval between each health check."},
 			{Name: "modified_on", Type: proto.ColumnType_TIMESTAMP, Description: "When the healthcheck was last modified."},
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Healthcheck name."},
 			{Name: "retries", Type: proto.ColumnType_INT, Description: "The number of retries to attempt in case of a timeout before marking the origin as unhealthy. Retries are attempted immediately."},
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "The current status of the origin server according to the health check."},
 			{Name: "suspended", Type: proto.ColumnType_BOOL, Description: "If suspended, no health checks are sent to the origin."},
-			{Name: "tcp_config", Type: proto.ColumnType_JSON,Transform: transform.FromField("TCPConfig"), Description: "Parameters specific to TCP health check."},
 			{Name: "timeout", Type: proto.ColumnType_INT, Description: "The timeout (in seconds) before marking the health check as failed."},
 			{Name: "type", Type: proto.ColumnType_STRING, Description: "The protocol to use for the health check. Currently supported protocols are 'HTTP', 'HTTPS' and 'TCP'."},
 			
 			// Query columns for filtering
 			{Name: "zone_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("zone_id"), Description: "The zone ID to filter custom certificates."},
+		
+			// JSON Columns
+			{Name: "tcp_config", Type: proto.ColumnType_JSON,Transform: transform.FromField("TCPConfig"), Description: "Parameters specific to TCP health check."},
+			{Name: "http_config", Type: proto.ColumnType_JSON,Transform: transform.FromField("HTTPConfig"), Description: "Parameters specific to an HTTP or HTTPS health check."},
+			{Name: "check_regions", Type: proto.ColumnType_JSON, Description: "A list of regions from which to run health checks. Null means Cloudflare will pick a default region."},
 		}),
 	}
 }

@@ -55,20 +55,21 @@ func tableCloudflareCustomPage(ctx context.Context) *plugin.Table {
 			{Name: "url", Type: proto.ColumnType_STRING, Description: "The URL associated with the custom page."},
 			{Name: "modified_on", Type: proto.ColumnType_TIMESTAMP, Description: "When the setting was last modified."},
 			{Name: "created_on", Type: proto.ColumnType_TIMESTAMP, Description: "When the custom page was created."},
-			{Name: "required_tokens", Type: proto.ColumnType_JSON, Description: "Error tokens are required by the custom page."},
 			{Name: "preview_target", Type: proto.ColumnType_STRING, Description: "Preview action to apply."},
 
 			// Query columns for filtering
 			{Name: "account_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("account_id"), Description: "The account ID to filter rulesets."},
 			{Name: "zone_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("zone_id"), Description: "The zone ID to filter rulesets."},
 
+			// JSON Columns
+			{Name: "required_tokens", Type: proto.ColumnType_JSON, Description: "Error tokens are required by the custom page."},
 		}),
 	}
 }
 
 //// LIST FUNCTION
 
-// listRulesets retrieves all custom pages for the specified account_id or zone_id.
+// listCustomPages retrieves all custom pages for the specified account_id or zone_id.
 //
 // This function handles both account-level and zone-level custom pages:
 // - Account-level rulesets (account_id)

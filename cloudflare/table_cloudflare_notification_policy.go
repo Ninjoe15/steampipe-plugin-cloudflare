@@ -38,13 +38,15 @@ func tableCloudflareNotificationPolicy(ctx context.Context) *plugin.Table {
 			{Name: "created", Type: proto.ColumnType_TIMESTAMP, Description: "When the notification policy was created."},
 			{Name: "description", Type: proto.ColumnType_STRING, Description: "Description for the Notification policy."},
 			{Name: "enabled", Type: proto.ColumnType_BOOL, Description: "Whether or not the Notification policy is enabled."},
-			{Name: "filters", Type: proto.ColumnType_JSON, Description: "Filters that allow you to be alerted only on a subset of events for that alert type based on some criteria."},
-			{Name: "mechanisms", Type: proto.ColumnType_JSON, Description: "List of IDs that will be used when dispatching a notification."},
 			{Name: "modified", Type: proto.ColumnType_TIMESTAMP, Description: "When the notification policy was last modified."},
 			{Name: "name", Type: proto.ColumnType_STRING, Description: "Name of the policy."},
 			
 			// Query columns for filtering
 			{Name: "account_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("account_id"), Description: "The account ID to filter rulesets."},
+		
+			// JSON Columns
+			{Name: "mechanisms", Type: proto.ColumnType_JSON, Description: "List of IDs that will be used when dispatching a notification."},
+			{Name: "filters", Type: proto.ColumnType_JSON, Description: "Filters that allow you to be alerted only on a subset of events for that alert type based on some criteria."},
 		}),
 	}
 }
@@ -53,7 +55,7 @@ func tableCloudflareNotificationPolicy(ctx context.Context) *plugin.Table {
 
 // listNotificationPolicies retrieves all notification policies for the specified account_id.
 //
-// - Account-level notification policies (account_id)
+// Account-level notification policies (account_id)
 func listNotificationPolicies(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	conn, err := connectV4(ctx, d)

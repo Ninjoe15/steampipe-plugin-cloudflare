@@ -44,10 +44,13 @@ func tableCloudflareCustomCertificate(ctx context.Context) *plugin.Table {
 			{Name: "status", Type: proto.ColumnType_STRING, Description: "Status of the zone's custom SSL."},
 			{Name: "uploaded_on", Type: proto.ColumnType_TIMESTAMP, Description: "When the certificate was uploaded to Cloudflare."},
 			{Name: "geo_restrictions", Type: proto.ColumnType_STRING,Transform: transform.From(transformGeoRestrictions), Description: "Specify the region where your private key can be held locally for optimal TLS performance."},
-			{Name: "keyless_server", Type: proto.ColumnType_JSON, Description: "Keyless certificate details."},
 			{Name: "policy", Type: proto.ColumnType_STRING, Description: "Specify the policy that determines the region where your private key will be held locally."},
+			
 			// Query columns for filtering
 			{Name: "zone_id", Type: proto.ColumnType_STRING, Transform: transform.FromField("ZoneID"), Description: "The zone ID to filter custom certificates."},
+		
+			// JSON Columns
+			{Name: "keyless_server", Type: proto.ColumnType_JSON, Description: "Keyless certificate details."},
 		}),
 	}
 }

@@ -15,7 +15,7 @@ import (
 func tableCloudflareWorkerScript(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "cloudflare_worker_script",
-		Description: "",
+		Description: "Cloudflare Worker Scripts host custom serverless code executed at Cloudflare’s edge for enhanced logic, routing, and performance optimizations.",
 		List: &plugin.ListConfig{
 			Hydrate:       listWorkerScripts,
 			ParentHydrate: listAccount, 
@@ -32,16 +32,23 @@ func tableCloudflareWorkerScript(ctx context.Context) *plugin.Table {
 			{Name: "has_modules", Type: proto.ColumnType_BOOL, Description: "Whether a Worker contains modules."},
 			{Name: "logpush", Type: proto.ColumnType_BOOL, Description: "Whether Logpush is turned on for the Worker."},
 			{Name: "modified_on", Type: proto.ColumnType_TIMESTAMP, Description: "When the script was last modified."},
-			{Name: "placement", Type: proto.ColumnType_JSON, Transform: transform.FromField("Placement"), Description: "Configuration for Smart Placement."},
-			{Name: "tail_consumers", Type: proto.ColumnType_JSON, Description: "List of Workers that will consume logs from the attached Worker."},
 			{Name: "usage_model", Type: proto.ColumnType_STRING, Description: "Usage model for the Worker invocations."},
-			{Name: "subdomain", Type: proto.ColumnType_JSON, Hydrate: GetWorkerSubdomain, Transform: transform.FromValue(),Description: "If the Worker is available on the workers.dev subdomain."},
-			{Name: "account_id", Type: proto.ColumnType_STRING, Hydrate: getParentAccountDetails, Transform: transform.FromField("ID"), Description: "Account identifier."},
 			{Name: "account_name", Type: proto.ColumnType_STRING,  Hydrate: getParentAccountDetails, Transform: transform.FromField("Name"), Description: "Account name."},
+		
+			// Query columns for filtering
+			{Name: "account_id", Type: proto.ColumnType_STRING, Hydrate: getParentAccountDetails, Transform: transform.FromField("ID"), Description: "Account identifier."},
+		
+			// JSON Columns
+			{Name: "subdomain", Type: proto.ColumnType_JSON, Hydrate: getWorkerSubdomain, Transform: transform.FromValue(),Description: "If the Worker is available on the workers.dev subdomain."},
+			{Name: "tail_consumers", Type: proto.ColumnType_JSON, Description: "List of Workers that will consume logs from the attached Worker."},
+			{Name: "placement", Type: proto.ColumnType_JSON, Transform: transform.FromField("Placement"), Description: "Configuration for Smart Placement."},
 		}),
 	}
 }
 
+//// LIST FUNCTION
+
+// listWorkerScripts retrieves all notification policies across all accounts.
 func listWorkerScripts(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	accountDetails := h.Item.(accounts.Account)
@@ -76,11 +83,13 @@ func listWorkerScripts(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 	return nil, nil
 }
 
-func getParentAccountDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	return h.ParentItem.(accounts.Account), nil
-}
+//// GET FUNCTION
 
-func GetWorkerSubdomain(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+// getWorkerSubdomain returns if the Worker is available on the workers.dev subdomain.
+//
+// Parameters:
+// - id: The ruleset identifier (required)
+func getWorkerSubdomain(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	account := h.ParentItem.(accounts.Account)
     script := h.Item.(workers.Script)
@@ -97,8 +106,12 @@ func GetWorkerSubdomain(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 		return nil, err
 	}
 
-	// SDK does not map the responde correctly, therefore returning the raw json instead
+	// SDK does not map the response correctly, therefore returning the raw json instead
 	var m map[string]json.RawMessage
 	json.Unmarshal([]byte(subdomain.JSON.RawJSON()), &m)
 	return m["result"], nil
+}
+
+func getParentAccountDetails(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	return h.ParentItem.(accounts.Account), nil
 }

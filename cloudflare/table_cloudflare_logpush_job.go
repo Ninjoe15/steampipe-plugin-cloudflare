@@ -34,25 +34,27 @@ func tableCloudflareLogpushJob(ctx context.Context) *plugin.Table {
 		},
 		Columns: commonColumns([]*plugin.Column{
 			// Top columns
-			{Name: "id", Type: proto.ColumnType_INT, Transform: transform.FromField("ID"), Description: "Ruleset identifier."},
-			{Name: "dataset", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "destination_conf", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "enabled", Type: proto.ColumnType_BOOL, Description: "Ruleset identifier."},
-			{Name: "error_message", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "frequency", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "kind", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "last_complete", Type: proto.ColumnType_TIMESTAMP, Description: "Ruleset identifier."},
-			{Name: "last_error", Type: proto.ColumnType_TIMESTAMP, Description: "Ruleset identifier."},
-			{Name: "logpull_options", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "max_upload_bytes", Type: proto.ColumnType_DOUBLE, Description: "Ruleset identifier."},
-			{Name: "max_upload_interval_seconds", Type: proto.ColumnType_DOUBLE, Description: "Ruleset identifier."},
-			{Name: "max_upload_records", Type: proto.ColumnType_DOUBLE, Description: "Ruleset identifier."},
-			{Name: "name", Type: proto.ColumnType_STRING, Description: "Ruleset identifier."},
-			{Name: "output_options", Type: proto.ColumnType_JSON, Description: "Ruleset identifier."},
+			{Name: "id", Type: proto.ColumnType_INT, Transform: transform.FromField("ID"), Description: "Logpush Job identifier."},
+			{Name: "dataset", Type: proto.ColumnType_STRING, Description: "Name of the dataset."},
+			{Name: "destination_conf", Type: proto.ColumnType_STRING, Description: " Uniquely identifies a resource (such as an s3 bucket) where data will be pushed."},
+			{Name: "enabled", Type: proto.ColumnType_BOOL, Description: "Flag that indicates if the job is enabled."},
+			{Name: "error_message", Type: proto.ColumnType_STRING, Description: "If not null, the job is currently failing."},
+			{Name: "frequency", Type: proto.ColumnType_STRING, Description: "[Deprecated] The frequency at which Cloudflare sends batches of logs to your destination - Use `max_upload_*` parameters instead "},
+			{Name: "kind", Type: proto.ColumnType_STRING, Description: "The kind parameter (optional) is used to differentiate between Logpush and Edge Log Delivery jobs (when supported by the dataset)."},
+			{Name: "last_complete", Type: proto.ColumnType_TIMESTAMP, Description: "Records the last time for which logs have been successfully pushed."},
+			{Name: "last_error", Type: proto.ColumnType_TIMESTAMP, Description: "Records the last time the job failed."},
+			{Name: "logpull_options", Type: proto.ColumnType_STRING, Description: "[Deprecated] It specifies things like requested fields and timestamp formats - Use `output_options` instead."},
+			{Name: "max_upload_bytes", Type: proto.ColumnType_DOUBLE, Description: "The maximum uncompressed file size of a batch of logs."},
+			{Name: "max_upload_interval_seconds", Type: proto.ColumnType_DOUBLE, Description: "The maximum interval in seconds for log batches."},
+			{Name: "max_upload_records", Type: proto.ColumnType_DOUBLE, Description: "The maximum number of log lines per batch."},
+			{Name: "name", Type: proto.ColumnType_STRING, Description: "Optional human readable job name."},
 
 			// Query columns for filtering
 			{Name: "account_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("account_id"), Description: "The account ID to filter rulesets."},
 			{Name: "zone_id", Type: proto.ColumnType_STRING, Transform: transform.FromQual("zone_id"), Description: "The zone ID to filter rulesets."},
+		
+			// JSON Columns
+			{Name: "output_options", Type: proto.ColumnType_JSON, Description: "The structured replacement for `logpull_options`."},
 		}),
 	}
 }
