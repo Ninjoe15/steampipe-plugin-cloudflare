@@ -92,6 +92,10 @@ func listCustomCertificates(ctx context.Context, d *plugin.QueryData, _ *plugin.
 		}
 	}
 	if err := iter.Err(); err != nil {
+		// Custom certificates are not available for all plan levels.
+		if strings.Contains(err.Error(), "Plan level does not allow custom certificates") {
+			return nil, nil
+		}
 		logger.Error("cloudflare_custom_certificate.listCustomCertificates", "ListAutoPaging error", err)
 		return nil, err
 	}
