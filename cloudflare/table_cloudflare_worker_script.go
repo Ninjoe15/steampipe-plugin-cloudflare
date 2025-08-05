@@ -90,7 +90,6 @@ func listWorkerScripts(ctx context.Context, d *plugin.QueryData, h *plugin.Hydra
 // Parameters:
 // - id: The ruleset identifier (required)
 func getWorkerSubdomain(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	logger := plugin.Logger(ctx)
 	account := h.ParentItem.(accounts.Account)
     script := h.Item.(workers.Script)
 
